@@ -1,7 +1,7 @@
 import json
 
 from src.util.dto import DTOBase
-from marshmallow import Schema, fields, EXCLUDE
+from marshmallow import Schema, fields, EXCLUDE, pre_load
 
 
 class UserSchema(Schema):
@@ -10,27 +10,36 @@ class UserSchema(Schema):
         unknown = EXCLUDE
 
     name = fields.String(
-        required=True,
         data_key='name',
         error_messages={
             'invalid': 'Name must be a string!'
         })
 
     email = fields.Email(
-        required=True,
         data_key='email',
         error_messages={
-            'invalid': 'Email must be a string!'
+            'invalid': 'Email must follow a correct email format!'
         })
 
     password = fields.String(
-        required=True,
         data_key='password',
         error_messages={
             'invalid': 'Password must be a string!'
         })
 
     PUT_FIELDS = [name.data_key, password.data_key]
+    POST_FIELDS = [name.data_key, password.data_key]
+
+    @pre_load
+    def check_context(self, data, **kwargs):
+        """ Checks context before deserializing the user data
+        """
+        # changing required to True if the load request is a POST request
+        if 'post' in self.context:
+            for field in self.POST_FIELDS:
+                self.fields[field].required = True
+
+        return data
 
 
 class UserDTO(DTOBase):

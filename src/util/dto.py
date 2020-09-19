@@ -22,7 +22,7 @@ class DTOError(DTOBase):
     def to_response(self):
         error = {
             'message': self.message,
-            'code': self.message,
+            'code': self.code,
         }
 
         return error, self.status_code

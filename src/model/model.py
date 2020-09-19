@@ -1,7 +1,11 @@
 from peewee import *
+from src.config import ConfigDatase
 
-database = MySQLDatabase('sensorium_users', **{'charset': 'utf8', 'sql_mode': 'PIPES_AS_CONCAT',
-                                               'use_unicode': True, 'host': '192.168.0.20', 'port': 3308, 'user': 'root', 'password': 'inverifica'})
+database = MySQLDatabase('sensorium_users', **{
+    'charset': 'utf8', 'sql_mode': 'PIPES_AS_CONCAT',
+    'use_unicode': True, 'host': ConfigDatase.Host,
+    'port': ConfigDatase.Port, 'user': ConfigDatase.User,
+    'password': ConfigDatase.Password})
 
 
 class UnknownField(object):
