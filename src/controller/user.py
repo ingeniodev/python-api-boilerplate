@@ -4,20 +4,15 @@ from src.model.model import Users
 from src.dto.user import UserDTO, UserSchema
 from src.util.dto import DTOError, DTOBase
 from src.util.http_codes import Status
+from src.util.database import requires_user
 
 api_user = Namespace('user', description='User Api')
 
 
 @api_user.route('/<int:user_id>')
 class User(Resource):
-    def get(self, user_id):
-        try:
-            user = Users.get(Users.id_user == user_id)
-        except Users.DoesNotExist:
-            return DTOError(status_code=Status.HTTP_404_NOT_FOUND,
-                            message="User not found!",
-                            code="not_found").to_response()
-
+    @requires_user
+    def get(self, user):
         return UserDTO(Status.HTTP_200_OK, user).to_response()
 
     def delete(self, user_id):
@@ -30,14 +25,8 @@ class User(Resource):
         return DTOBase(Status.HTTP_200_OK,
                        "User deleted!").to_response()
 
-    def put(self, user_id):
-        try:
-            user = Users.get(Users.id_user == user_id)
-        except Users.DoesNotExist:
-            return DTOError(status_code=Status.HTTP_404_NOT_FOUND,
-                            message="User not found!",
-                            code="not_found").to_response()
-
+    @requires_user
+    def put(self, user):
         u = UserSchema(only=UserSchema.PUT_FIELDS).load(request.json)
         user.name = u['name'] if 'name' in u else user.name
         user.password = u['password'] if 'password' in u else user.password
