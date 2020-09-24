@@ -1,5 +1,6 @@
 import json
 from flask import Response
+from flask_restplus import fields
 
 
 class DTOBase():
@@ -26,3 +27,10 @@ class DTOError(DTOBase):
         }
 
         return error, self.status_code
+
+    @staticmethod
+    def doc(api):
+        return api.model(DTOError.__name__, {
+            'message': fields.String,
+            'code': fields.String,
+        })

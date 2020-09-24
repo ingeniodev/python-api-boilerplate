@@ -2,6 +2,7 @@ import json
 
 from src.util.dto import DTOBase
 from marshmallow import Schema, fields, EXCLUDE, pre_load
+from flask_restplus import fields as fields_rest
 
 
 class UserSchema(Schema):
@@ -42,7 +43,7 @@ class UserSchema(Schema):
         return data
 
 
-class UserDTO(DTOBase):
+class DTOUser(DTOBase):
 
     def __init__(self, status_code, user, is_public=True):
         self.user = user
@@ -59,4 +60,11 @@ class UserDTO(DTOBase):
         if not self.is_public:
             user_json['email'] = self.user.email
 
-        return user_json,  self.status_code
+        return user_json, self.status_code
+
+    @staticmethod
+    def doc(api):
+        return api.model(DTOUser.__name__, {
+            'id_user': fields_rest.Integer,
+            'name': fields_rest.String,
+        })

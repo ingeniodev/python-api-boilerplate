@@ -5,6 +5,7 @@ from src.util.dto import DTOError
 from src.model.model import Users
 from src.util.http_codes import Status
 
+
 def requires_user(f):
     @wraps(f)
     def wrap(self, user_id, *args, **kwargs):
