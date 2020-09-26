@@ -1,7 +1,7 @@
 from peewee import *
 from src.config import ConfigDatase
 
-database = MySQLDatabase('sensorium_users', **{
+database = MySQLDatabase(ConfigDatase.Database, **{
     'charset': 'utf8', 'sql_mode': 'PIPES_AS_CONCAT',
     'use_unicode': True, 'host': ConfigDatase.Host,
     'port': ConfigDatase.Port, 'user': ConfigDatase.User,
