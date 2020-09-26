@@ -4,6 +4,7 @@ from flask_restplus import Api
 from dotenv import load_dotenv
 
 from .controller.user import api_user
+from .controller.auth import api_auth
 from src.config import app_config
 
 load_dotenv()
@@ -15,6 +16,7 @@ api = Api(api_v1, version='1.0', title='API',
           description='A boilerplate API')
 
 api.add_namespace(api_user)
+api.add_namespace(api_auth)
 
 app = Flask(__name__)
 app.config.from_object(app_config[env_mode])

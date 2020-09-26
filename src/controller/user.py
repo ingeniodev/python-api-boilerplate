@@ -14,8 +14,10 @@ api_user = Namespace('user', description='User Api')
 class User(Resource):
 
     @requires_user
-    @api_user.response(200, 'User information', DTOUser.doc(api_user))
-    @api_user.response(404, 'not_found', DTOError.doc(api_user))
+    @api_user.response(Status.HTTP_200_OK, 'User information',
+                       DTOUser.doc(api_user))
+    @api_user.response(Status.HTTP_404_NOT_FOUND, 'not_found',
+                       DTOError.doc(api_user))
     def get(self, user):
         return DTOUser(Status.HTTP_200_OK, user).to_response()
 
@@ -31,8 +33,10 @@ class User(Resource):
                        "User deleted!").to_response()
 
     @requires_user
-    @api_user.response(200, 'User information updated', DTOUser.doc(api_user))
-    @api_user.response(404, 'not_found', DTOError.doc(api_user))
+    @api_user.response(Status.HTTP_200_OK, 'User information updated',
+                       DTOUser.doc(api_user))
+    @api_user.response(Status.HTTP_404_NOT_FOUND, 'not_found',
+                       DTOError.doc(api_user))
     def put(self, user):
         u = UserSchema(only=UserSchema.PUT_FIELDS).load(request.json)
         user.name = u['name'] if 'name' in u else user.name
@@ -45,8 +49,10 @@ class User(Resource):
 @api_user.route('')
 class NewUser(Resource):
 
-    @api_user.response(201, 'New user information', DTOUser.doc(api_user))
-    @api_user.response(404, 'database_error', DTOError.doc(api_user))
+    @api_user.response(Status.HTTP_201_CREATED, 'New user information',
+                       DTOUser.doc(api_user))
+    @api_user.response(Status.HTTP_400_BAD_REQUEST, 'database_error',
+                       DTOError.doc(api_user))
     def post(self):
         u = UserSchema(context={'post': True}).load(request.json)
 
