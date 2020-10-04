@@ -1,3 +1,4 @@
+import marshmallow
 from flask_restplus import Namespace, Resource, fields, Model
 from flask import Response, request
 from src.model.model import Users
@@ -5,6 +6,7 @@ from src.dto.user import DTOUser, UserSchema
 from src.util.dto import DTOError, DTOBase
 from src.util.http_codes import Status
 from src.util.database import requires_user
+from src.util.authentication import requires_auth
 
 api_user = Namespace('user', description='User Api')
 
@@ -13,6 +15,7 @@ api_user = Namespace('user', description='User Api')
 @api_user.doc(params={'user_id': {'description': 'An user ID', 'type': 'int'}})
 class User(Resource):
 
+    @requires_auth
     @requires_user
     @api_user.response(Status.HTTP_200_OK, 'User information',
                        DTOUser.doc(api_user))
@@ -21,6 +24,7 @@ class User(Resource):
     def get(self, user):
         return DTOUser(Status.HTTP_200_OK, user).to_response()
 
+    @requires_auth
     @api_user.response(200, 'User deleted')
     def delete(self, user_id):
         try:
@@ -32,6 +36,7 @@ class User(Resource):
         return DTOBase(Status.HTTP_200_OK,
                        "User deleted!").to_response()
 
+    @requires_auth
     @requires_user
     @api_user.response(Status.HTTP_200_OK, 'User information updated',
                        DTOUser.doc(api_user))
@@ -46,15 +51,20 @@ class User(Resource):
         return DTOUser(Status.HTTP_200_OK, user).to_response()
 
 
-@api_user.route('')
+@api_user.route('/')
 class NewUser(Resource):
-
+    @requires_auth
     @api_user.response(Status.HTTP_201_CREATED, 'New user information',
                        DTOUser.doc(api_user))
     @api_user.response(Status.HTTP_400_BAD_REQUEST, 'database_error',
                        DTOError.doc(api_user))
     def post(self):
-        u = UserSchema(context={'post': True}).load(request.json)
+        try:
+            u = UserSchema(context={'post': True}).load(request.json)
+        except marshmallow.ValidationError:
+            return DTOError(status_code=Status.HTTP_400_BAD_REQUEST,
+                            message='Required fields are not satisfied',
+                            code="bad_request").to_response()
 
         try:
             user = Users(name=u['name'], email=u['email'],
