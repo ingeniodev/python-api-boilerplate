@@ -1,13 +1,14 @@
 import os
 import jwt
-
+import hashlib
 from datetime import datetime, timedelta
 from flask import request
 from functools import wraps
+
 from src.model.model import Tokens
 from src.util.dto import DTOError
 from src.util.http_codes import Status
-request
+
 
 class AccessToken:
 
@@ -16,15 +17,14 @@ class AccessToken:
         self.__exp_delta = os.getenv('TOKEN_EXP_DELTA', 60*60)
         self.__token_algorithm = os.getenv('TOKEN_ALGORITHM', 'HS256')
 
-    def generate(self, user_id):
-        payload = {
-            'user_id': user_id,
-            'exp': datetime.utcnow() + timedelta(seconds=self.__exp_delta)
-        }
+    def generate(self, payload):
+        payload['exp'] = (
+            datetime.utcnow() + timedelta(seconds=self.__exp_delta)
+        )
 
         return jwt.encode(
-                        payload, self.__secret_token,
-                        self.__token_algorithm).decode('utf-8')
+            payload, self.__secret_token,
+            self.__token_algorithm).decode('utf-8')
 
     def validate(self, token):
         if token:
@@ -43,7 +43,7 @@ class AccessToken:
         if(not result):
             return False, None
 
-        return True, self.generate(payload['user_id'])
+        return True, self.generate(payload)
 
 
 def requires_auth(f):
@@ -57,8 +57,8 @@ def requires_auth(f):
             try:
                 user_id = payload.get('user_id')
                 token = Tokens.get(
-                                token=token,
-                                id_user=user_id)
+                    token=token,
+                    id_user=user_id)
             except Tokens.DoesNotExist:
                 result = False
 
@@ -69,3 +69,15 @@ def requires_auth(f):
 
         return f(self, *args, **kwargs)
     return wrap
+
+
+def generate_salt():
+    return hashlib.md5(os.urandom(29)).hexdigest()
+
+
+def encode_password(password, salt):
+    return hashlib.sha512((password + salt).encode()).hexdigest()
+
+
+def check_passwords(password_db, password_user, salt):
+    return password_db == encode_password(password_user, salt)

@@ -6,7 +6,8 @@ from src.dto.user import DTOUser, UserSchema
 from src.util.dto import DTOError, DTOBase
 from src.util.http_codes import Status
 from src.util.database import requires_user
-from src.util.authentication import requires_auth
+from src.util.authentication import requires_auth, \
+    encode_password, generate_salt
 
 api_user = Namespace('user', description='User Api')
 
@@ -45,15 +46,16 @@ class User(Resource):
     def put(self, user):
         u = UserSchema(only=UserSchema.PUT_FIELDS).load(request.json)
         user.name = u['name'] if 'name' in u else user.name
-        user.password = u['password'] if 'password' in u else user.password
+        user.password = encode_password(
+            u['password'], user.salt)if 'password' in u else user.password
         user.save()
 
         return DTOUser(Status.HTTP_200_OK, user).to_response()
 
 
-@api_user.route('/')
+@api_user.route('')
 class NewUser(Resource):
-    @requires_auth
+    # @requires_auth
     @api_user.response(Status.HTTP_201_CREATED, 'New user information',
                        DTOUser.doc(api_user))
     @api_user.response(Status.HTTP_400_BAD_REQUEST, 'database_error',
@@ -67,8 +69,12 @@ class NewUser(Resource):
                             code="bad_request").to_response()
 
         try:
-            user = Users(name=u['name'], email=u['email'],
-                         password=u['password'])
+            salt = generate_salt()
+            user = Users(
+                name=u['name'], email=u['email'],
+                password=encode_password(u['password'], salt),
+                salt=salt
+            )
             user.save()
         except Exception:
             return DTOError(status_code=Status.HTTP_500_INTERNAL_SERVER_ERROR,

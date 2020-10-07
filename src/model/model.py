@@ -1,5 +1,6 @@
 from peewee import *
 from src.config import ConfigDatase
+# from src.util.authentication import encode_password
 
 database = MySQLDatabase(ConfigDatase.Database, **{
     'charset': 'utf8', 'sql_mode': 'PIPES_AS_CONCAT',
@@ -22,6 +23,7 @@ class Users(BaseModel):
     id_user = BigAutoField(column_name='idUser')
     name = CharField()
     password = CharField()
+    salt = CharField()
 
     class Meta:
         table_name = 'users'

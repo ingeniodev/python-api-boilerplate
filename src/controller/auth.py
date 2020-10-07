@@ -5,7 +5,7 @@ from src.util.http_codes import Status
 from src.dto.login import LoginSchema
 from src.model.model import Users, Tokens
 from src.util.dto import DTOError
-from src.util.authentication import AccessToken
+from src.util.authentication import AccessToken, check_passwords
 from datetime import datetime
 
 api_auth = Namespace('auth', description='User Auth Api')
@@ -20,21 +20,24 @@ class Login(Resource):
         credentials = LoginSchema().load(request.json)
         try:
             user = Users.get(
-                Users.email == credentials['email'],
-                Users.password == credentials['password'])
+                Users.email == credentials['email'])
 
-            access_token = AccessToken()
-            token = Tokens(token=access_token.generate(user.id_user),
-                           id_user=user.id_user)
-            token.save()
+            if check_passwords(
+                    user.password, credentials['password'], user.salt):
+                access_token = AccessToken()
+                token = Tokens(
+                    token=access_token.generate({'user_id': user.id_user}),
+                    id_user=user.id_user
+                )
+                token.save()
 
-            return token.token, Status.HTTP_200_OK
+                return token.token, Status.HTTP_200_OK
         except Users.DoesNotExist:
             pass
 
         return DTOError(status_code=Status.HTTP_401_UNAUTHORIZED,
-                            message="Bad credentials",
-                            code="unauthorized").to_response()
+                        message="Bad credentials",
+                        code="unauthorized").to_response()
 
 
 @api_auth.route('/refresh')
@@ -63,8 +66,8 @@ class Refresh(Resource):
                 pass
 
         return (DTOError(status_code=Status.HTTP_401_UNAUTHORIZED,
-                        message="Bad token",
-                        code="unauthorized").to_response(),
+                         message="Bad token",
+                         code="unauthorized").to_response(),
                 Status.HTTP_401_UNAUTHORIZED)
 
 
@@ -79,8 +82,8 @@ class Logout(Resource):
         if result:
             try:
                 token = Tokens.get(
-                            token=token,
-                            id_user=payload.get('user_id'))
+                    token=token,
+                    id_user=payload.get('user_id'))
                 token.delete_instance()
             except Exception:
                 pass

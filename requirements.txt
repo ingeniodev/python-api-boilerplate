@@ -1,8 +1,6 @@
-flask_restplus==0.13.0
-Flask==1.1.2
-peewee==3.13.3
-Werkzeug==0.16.1
-python-dotenv==0.14.0
 marshmallow==3.8.0
-pymysql==0.10.1
-pyjwt-1.7.1
+Flask==1.1.2
+flask_restplus==0.13.0
+peewee==3.13.3
+PyJWT==1.7.1
+python-dotenv==0.14.0
